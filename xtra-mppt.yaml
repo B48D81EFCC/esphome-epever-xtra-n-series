@@ -1,0 +1,797 @@
+substitutions:
+  every_2s: "1"
+  every_60s: "30"
+  every_10m: "100"
+
+esphome:
+  name: rh-xtra-4415n
+  friendly_name: Riehlhome XTRA 4415N
+  name_add_mac_suffix: true
+
+esp32:
+  board: esp32-poe-iso
+  framework:
+    type: arduino
+
+logger:
+api:
+ota:
+
+ethernet:
+  type: LAN8720
+  mdc_pin: GPIO23
+  mdio_pin: GPIO18
+  clk_mode: GPIO17_OUT
+  phy_addr: 0
+  power_pin: GPIO12
+
+uart:
+  id: uart_a
+  tx_pin: GPIO04
+  rx_pin: GPIO36
+  baud_rate: 115200
+  data_bits: 8
+  stop_bits: 1
+
+modbus:
+  send_wait_time: 100ms
+  id: modbus_a
+
+modbus_controller:
+  - id: modbus_controller_a
+    modbus_id: modbus_a
+    address: 0x01
+    update_interval: 2s
+
+sensor:
+# PV parameters
+  #A3
+  - platform: modbus_controller
+    modbus_controller_id: modbus_controller_a
+    name: "PV Input Voltage"
+    address: 0x3100
+    value_type: U_WORD
+    register_type: read
+    device_class: "voltage"
+    state_class: "measurement"
+    unit_of_measurement: "V"
+    accuracy_decimals: 2
+    filters:
+      - multiply: 0.01
+    
+  #A4
+  - platform: modbus_controller
+    modbus_controller_id: modbus_controller_a
+    name: "PV Input Current"
+    address: 0x3101
+    value_type: U_WORD
+    register_type: read
+    device_class: "current"
+    state_class: "measurement"
+    unit_of_measurement: "A"
+    accuracy_decimals: 2
+    filters:
+      - multiply: 0.01
+  
+  #A5 + A6
+  - platform: modbus_controller
+    modbus_controller_id: modbus_controller_a
+    id: "pv_input_power"
+    name: "PV Input Power"
+    address: 0x3102
+    value_type: U_DWORD_R
+    register_type: read
+    device_class: "power"
+    state_class: "measurement"
+    unit_of_measurement: "W"
+    accuracy_decimals: 2
+    filters:
+      - multiply: 0.01
+
+  #A11
+  - platform: modbus_controller
+    modbus_controller_id: modbus_controller_a
+    name: "Battery Temperature"
+    address: 0x3110
+    value_type: S_WORD
+    register_type: read
+    skip_updates: ${every_60s}
+    device_class: "temperature"
+    state_class: "measurement"
+    unit_of_measurement: "°C"
+    accuracy_decimals: 1
+    filters:
+      - multiply: 0.01
+
+  #A12
+  - platform: modbus_controller
+    modbus_controller_id: modbus_controller_a
+    name: "Device Temperature"
+    address: 0x3111
+    value_type: S_WORD
+    register_type: read
+    skip_updates: ${every_60s}
+    device_class: "temperature"
+    state_class: "measurement"
+    unit_of_measurement: "°C"
+    accuracy_decimals: 1
+    filters:
+      - multiply: 0.01
+
+  #A13
+  - platform: modbus_controller
+    modbus_controller_id: modbus_controller_a
+    name: "Battery Remaining Capacity"
+    address: 0x311A
+    value_type: U_WORD
+    register_type: read
+    skip_updates: ${every_60s}
+    device_class: "battery"
+    state_class: "measurement"
+    unit_of_measurement: "%"
+    accuracy_decimals: 0
+
+  #A14
+  - platform: modbus_controller
+    modbus_controller_id: modbus_controller_a
+    name: "Battery Rated System Voltage"
+    address: 0x311D
+    value_type: U_WORD
+    register_type: read
+    skip_updates: ${every_60s}
+    device_class: "voltage"
+    state_class: "measurement"
+    unit_of_measurement: "V"
+    accuracy_decimals: 0
+    filters:
+      - multiply: 0.01
+
+    #A15
+  - platform: modbus_controller
+    modbus_controller_id: modbus_controller_a
+    id: "battery_status_raw_value"
+    internal: true
+    address: 0x3200
+    value_type: U_WORD
+    register_type: read
+    skip_updates: ${every_60s}
+    
+    #A16
+  - platform: modbus_controller
+    modbus_controller_id: modbus_controller_a
+    id: "battery_charging_equipment_status_raw_value"
+    internal: true
+    address: 0x3201
+    value_type: U_WORD
+    register_type: read
+    skip_updates: ${every_60s}
+
+  #A28 + A29
+  - platform: modbus_controller
+    modbus_controller_id: modbus_controller_a
+    name: "PV Generated Energy Day"
+    force_new_range: true
+    address: 0x330C
+    value_type: U_DWORD_R
+    register_type: read
+    skip_updates: ${every_10m}
+    device_class: "energy"
+    state_class: "total_increasing"
+    unit_of_measurement: "kWh"
+    accuracy_decimals: 2
+    filters:
+      - multiply: 0.01
+
+  #A30 + A31
+  - platform: modbus_controller
+    modbus_controller_id: modbus_controller_a
+    name: "PV Generated Energy Month"
+    address: 0x330E
+    value_type: U_DWORD_R
+    register_type: read
+    device_class: "energy"
+    skip_updates: ${every_10m}
+    state_class: "total_increasing"
+    unit_of_measurement: "kWh"
+    accuracy_decimals: 2
+    filters:
+      - multiply: 0.01
+
+  #A32 + A33
+  - platform: modbus_controller
+    modbus_controller_id: modbus_controller_a
+    name: "PV Generated Energy Year"
+    address: 0x3310
+    value_type: U_DWORD_R
+    register_type: read
+    skip_updates: ${every_10m}
+    device_class: "energy"
+    state_class: "total_increasing"
+    unit_of_measurement: "kWh"
+    accuracy_decimals: 2
+    filters:
+      - multiply: 0.01
+
+  #A34 + A35
+  - platform: modbus_controller
+    modbus_controller_id: modbus_controller_a
+    name: "PV Generated Energy Total"
+    address: 0x3312
+    value_type: U_DWORD_R
+    register_type: read
+    skip_updates: ${every_10m}
+    device_class: "energy"
+    state_class: "total_increasing"
+    unit_of_measurement: "kWh"
+    accuracy_decimals: 2
+    filters:
+      - multiply: 0.01
+  
+# Battery parameters
+  #A36
+  - platform: modbus_controller
+    modbus_controller_id: modbus_controller_a
+    id: "battery_voltage_sensor"
+    name: "Battery Voltage"
+    address: 0x331A
+    value_type: U_WORD
+    register_type: read
+    device_class: "voltage"
+    state_class: "measurement"
+    unit_of_measurement: "V"
+    accuracy_decimals: 2
+    filters:
+      - multiply: 0.01
+
+  #A37 + A38
+  - platform: modbus_controller
+    modbus_controller_id: modbus_controller_a
+    id: "battery_current_sensor"
+    name: "Battery Current"
+    address: 0x331B
+    value_type: U_DWORD_R
+    register_type: read
+    device_class: "current"
+    state_class: "measurement"
+    unit_of_measurement: "A"
+    accuracy_decimals: 2
+    filters:
+      - multiply: 0.01
+
+  - platform: template
+    id: "battery_power_sensor"
+    name: "Battery Power"
+    update_interval: 2s
+    device_class: "power"
+    state_class: "measurement"
+    unit_of_measurement: "W"
+    accuracy_decimals: 2
+    lambda: |-
+      return (id(battery_voltage_sensor).state) * (id(battery_current_sensor).state);
+  
+  #B6
+  - platform: modbus_controller
+    modbus_controller_id: modbus_controller_a
+    name: "Temperature Compensation Coefficient"
+    entity_category: diagnostic
+    address: 0x9002
+    value_type: U_WORD
+    register_type: holding
+    skip_updates: ${every_10m}
+    device_class: "voltage"
+    state_class: "measurement"
+    unit_of_measurement: "mV"
+    accuracy_decimals: 2
+    filters:
+      - multiply: 0.01
+  
+  #B7
+  - platform: modbus_controller
+    modbus_controller_id: modbus_controller_a
+    name: "Over Voltage Disconnect Voltage"
+    entity_category: diagnostic
+    address: 0x9003
+    value_type: U_WORD
+    register_type: holding
+    skip_updates: ${every_10m}
+    device_class: "voltage"
+    state_class: "measurement"
+    unit_of_measurement: "V"
+    accuracy_decimals: 2
+    filters:
+      - multiply: 0.01
+  
+  #B8
+  - platform: modbus_controller
+    modbus_controller_id: modbus_controller_a
+    name: "Charging Limit Voltage"
+    entity_category: diagnostic
+    address: 0x9004
+    value_type: U_WORD
+    register_type: holding
+    skip_updates: ${every_10m}
+    device_class: "voltage"
+    state_class: "measurement"
+    unit_of_measurement: "V"
+    accuracy_decimals: 2
+    filters:
+      - multiply: 0.01
+  
+  #B9
+  - platform: modbus_controller
+    modbus_controller_id: modbus_controller_a
+    name: "Over Voltage Reconnect Voltage"
+    entity_category: diagnostic
+    address: 0x9005
+    value_type: U_WORD
+    register_type: holding
+    skip_updates: ${every_10m}
+    device_class: "voltage"
+    state_class: "measurement"
+    unit_of_measurement: "V"
+    accuracy_decimals: 2
+    filters:
+      - multiply: 0.01
+  
+  #B11
+  - platform: modbus_controller
+    modbus_controller_id: modbus_controller_a
+    name: "Boost Charging Voltage"
+    entity_category: diagnostic
+    address: 0x9007
+    value_type: U_WORD
+    register_type: holding
+    skip_updates: ${every_10m}
+    device_class: "voltage"
+    state_class: "measurement"
+    unit_of_measurement: "V"
+    accuracy_decimals: 2
+    filters:
+      - multiply: 0.01
+  
+  #B12
+  - platform: modbus_controller
+    modbus_controller_id: modbus_controller_a
+    name: "Float Charging Voltage"
+    entity_category: diagnostic
+    address: 0x9008
+    value_type: U_WORD
+    register_type: holding
+    skip_updates: ${every_10m}
+    device_class: "voltage"
+    state_class: "measurement"
+    unit_of_measurement: "V"
+    accuracy_decimals: 2
+    filters:
+      - multiply: 0.01
+  
+  #B13
+  - platform: modbus_controller
+    modbus_controller_id: modbus_controller_a
+    name: "Boost Reconnect Charging Voltage"
+    entity_category: diagnostic
+    address: 0x9009
+    value_type: U_WORD
+    skip_updates: ${every_10m}
+    register_type: holding
+    device_class: "voltage"
+    state_class: "measurement"
+    unit_of_measurement: "V"
+    accuracy_decimals: 2
+    filters:
+      - multiply: 0.01
+  
+  #B14
+  - platform: modbus_controller
+    modbus_controller_id: modbus_controller_a
+    name: "Low voltage Reconnect Voltage"
+    entity_category: diagnostic
+    address: 0x900A
+    value_type: U_WORD
+    skip_updates: ${every_10m}
+    register_type: holding
+    device_class: "voltage"
+    state_class: "measurement"
+    unit_of_measurement: "V"
+    accuracy_decimals: 2
+    filters:
+      - multiply: 0.01
+  
+  #B15
+  - platform: modbus_controller
+    modbus_controller_id: modbus_controller_a
+    name: "Under Voltage Warning Recover Voltage"
+    entity_category: diagnostic
+    address: 0x900B
+    value_type: U_WORD
+    register_type: holding
+    skip_updates: ${every_10m}
+    device_class: "voltage"
+    state_class: "measurement"
+    unit_of_measurement: "V"
+    accuracy_decimals: 2
+    filters:
+      - multiply: 0.01
+  
+  #B16
+  - platform: modbus_controller
+    modbus_controller_id: modbus_controller_a
+    name: "Under Voltage Warning Voltage"
+    entity_category: diagnostic
+    address: 0x900C
+    value_type: U_WORD
+    register_type: holding
+    skip_updates: ${every_10m}
+    device_class: "voltage"
+    state_class: "measurement"
+    unit_of_measurement: "V"
+    accuracy_decimals: 2
+    filters:
+      - multiply: 0.01
+  
+  #B17
+  - platform: modbus_controller
+    modbus_controller_id: modbus_controller_a
+    name: "Low Voltage Disconnect Voltage"
+    entity_category: diagnostic
+    address: 0x900D
+    value_type: U_WORD
+    register_type: holding
+    skip_updates: ${every_10m}
+    device_class: "voltage"
+    state_class: "measurement"
+    unit_of_measurement: "V"
+    accuracy_decimals: 2
+    filters:
+      - multiply: 0.01
+  
+  #B18
+  - platform: modbus_controller
+    modbus_controller_id: modbus_controller_a
+    name: "Discharging Limit Voltage"
+    entity_category: diagnostic
+    address: 0x900E
+    value_type: U_WORD
+    register_type: holding
+    skip_updates: ${every_10m}
+    device_class: "voltage"
+    state_class: "measurement"
+    unit_of_measurement: "V"
+    accuracy_decimals: 2
+    filters:
+      - multiply: 0.01
+
+text_sensor:
+  - platform: template
+    name: "Charging Phase"
+    entity_category: diagnostic
+    lambda: |-
+      if(id(battery_charging_equipment_status_no_charging_binary_sensor).state)
+      {
+        return { "No charging" };
+      }
+
+      if(id(battery_charging_equipment_status_float_binary_sensor).state)
+      {
+        return { "Float" };
+      }
+
+      if(id(battery_charging_equipment_status_boost_binary_sensor).state)
+      {
+        return { "Boost" };
+      }
+
+      return  { "Unknown" };
+
+  - platform: template
+    name: "Battery Status Voltage"
+    update_interval: 60s
+    entity_category: diagnostic
+    lambda: |-
+      if(id(battery_status_normal_voltage_binary_sensor).state) {
+        return { "Normal" };
+      }
+
+      if(id(battery_status_over_voltage_binary_sensor).state) {
+        return { "Over Voltage" };
+      }
+
+      if(id(battery_status_under_voltage_binary_sensor).state) {
+        return { "Under Voltage" };
+      }
+
+      if(id(battery_status_over_discharge_binary_sensor).state) {
+        return { "Over Discharge" }; 
+      }
+
+      if(id(battery_status_fault_binary_sensor).state) {
+        return { "Fault" }; 
+      }
+      
+      return  { "Unknown" };
+
+  - platform: template
+    name: "Battery Status Temperatur"
+    update_interval: 60s
+    entity_category: diagnostic
+    lambda: |-
+      if(id(battery_status_normal_temp_sensor).state) {
+        return { "Normal" };
+      }
+
+      if(id(battery_status_over_temp_sensor).state) {
+        return { "Over Temperatur" };
+      }
+
+      if(id(battery_status_low_temp_sensor).state) {
+        return { "Low Temperatur" };
+      }
+      
+      return  { "Unknown" };
+
+  - platform: template
+    name: "Battery Inner Resistance"
+    update_interval: 60s
+    entity_category: diagnostic
+    lambda: |-
+      if(id(battery_status_inner_resistance_abnormal).state)
+      {
+        return  { "Abnormal" };
+      }
+
+      if(id(battery_status_inner_resistance_normal).state)
+      {
+        return  { "Normal" };
+      }     
+
+      return  { "Unknown" };
+
+  - platform: ethernet_info
+    ip_address:
+      name: "IP"
+
+binary_sensor:
+  #A1 | Over temperature inside the device
+  - platform: modbus_controller
+    modbus_controller_id: modbus_controller_a
+    name: "Over Temperature Device"
+    entity_category: diagnostic
+    device_class: problem
+    address: 0x2000
+    register_type: discrete_input
+    bitmask: 0x01
+    skip_updates: ${every_60s}
+
+# Battery Status Values
+  #A15 | D3-D0 | 00H | Normal Voltage
+  - platform: template
+    id: "battery_status_normal_voltage_binary_sensor"
+    name: "Battery Status Normal Voltage"
+    entity_category: diagnostic
+    lambda: |-
+     if(id(battery_status_raw_value).state == 0) {
+      return true;
+     } else {
+      return false;
+     }
+
+  #A15 | D3-D0 | 01H | Over Voltage
+  - platform: template
+    id: "battery_status_over_voltage_binary_sensor"
+    name: "Battery Status Over Voltage"
+    entity_category: diagnostic
+    lambda: |-
+     if(id(battery_status_raw_value).state == 1) {
+      return true;
+     } else {
+      return false;
+     }
+
+  #A15 | D3-D0 | 02H | Under Voltage
+  - platform: template
+    id: "battery_status_under_voltage_binary_sensor"
+    name: "Battery Status Under Voltage"
+    entity_category: diagnostic
+    lambda: |-
+     if(id(battery_status_raw_value).state == 2) {
+      return true;
+     } else {
+      return false;
+     }
+
+  #A15 | D3-D0 | 03H | Over Discharge
+  - platform: template
+    id: "battery_status_over_discharge_binary_sensor"
+    name: "Battery Status Over Discharge"
+    entity_category: diagnostic
+    lambda: |-
+     if(id(battery_status_raw_value).state == 3) {
+      return true;
+     } else {
+      return false;
+     }
+
+  #A15 | D3-D0 | 04H | Fault
+  - platform: template
+    id: "battery_status_fault_binary_sensor"
+    name: "Battery Status Fault"
+    entity_category: diagnostic
+    lambda: |-
+      if(id(battery_status_raw_value).state == 4) {
+        return true;
+      } else {
+        return false;
+      }
+
+  #A15 | D7-D4 | 00H | Normal
+  - platform: template
+    id: "battery_status_normal_temp_sensor"
+    name: "Battery Temp. Status Normal"
+    entity_category: diagnostic
+    lambda: |-
+      uint16_t value = int(id(battery_status_raw_value).state) >> 4;
+      if(value == 0) {
+        return true;
+      } else {
+        return false;
+      }
+
+  #A15 | D7-D4 | 01H | Over Temperature
+  - platform: template
+    id: "battery_status_over_temp_sensor"
+    name: "Battery Temp. Status Too High"
+    entity_category: diagnostic
+    lambda: |-
+      uint16_t value = int(id(battery_status_raw_value).state) >> 4;
+      if(value == 1) {
+        return true;
+      } else {
+        return false;
+      }
+
+  #A15 | D7-D4 | 02H | Low Temperature
+  - platform: template
+    id: "battery_status_low_temp_sensor"
+    name: "Battery Temp. Status Too Low"
+    entity_category: diagnostic
+    lambda: |-
+      uint16_t value = int(id(battery_status_raw_value).state) >> 4;
+      if(value == 2) {
+        return true;
+      } else {
+        return false;
+      }
+
+  #A15 | D8 | 00H | Battery inner resistance normal
+  - platform: template
+    id: "battery_status_inner_resistance_normal"
+    name: "Battery Inner Resistance Normal"
+    entity_category: diagnostic
+    lambda: |-
+      uint16_t value = int(id(battery_charging_equipment_status_raw_value).state) >> 7;
+      if(value == 0) {
+        return true; // Normal
+      } else {
+        return false; // Normal
+      }
+
+  #A15 | D8 | 01H | Battery inner resistance abnormal
+  - platform: template
+    id: "battery_status_inner_resistance_abnormal"
+    name: "Battery Inner Resistance Abnormal"
+    entity_category: diagnostic
+    lambda: |-
+      uint16_t value = int(id(battery_charging_equipment_status_raw_value).state) >> 7;
+      if(value == 0) {
+        return false; // Normal
+      } else {
+        return true; // Abnormal
+      }
+
+# Charging Equipment Status Values
+  #A16 | D0 | 00H | Standby
+  - platform: template
+    id: "battery_charging_equipment_status_standby_binary_sensor"
+    name: "Charging Status Standby"
+    entity_category: diagnostic
+    lambda: |-
+      uint16_t value = id(battery_charging_equipment_status_raw_value).state;
+      if(value == 0) {
+        return true;
+      } else {
+        return false;
+      }
+
+  #A16 | D0 | 01H | Running
+  - platform: template
+    id: "battery_charging_equipment_status_running_binary_sensor"
+    name: "Charging Status Running"
+    entity_category: diagnostic
+    lambda: |-
+      uint16_t value = id(battery_charging_equipment_status_raw_value).state;
+      if(value == 1) {
+        return true;
+      } else {
+        return false;
+      }
+
+  #A16 | D1 | 00H | Normal
+  - platform: template
+    id: "battery_charging_equipment_status_normal_binary_sensor"
+    name: "Charging Status Running"
+    entity_category: diagnostic
+    lambda: |-
+      uint16_t value = int(id(battery_charging_equipment_status_raw_value).state) >> 1;
+      if(value == 0) {
+        return true;
+      } else {
+        return false;
+      }
+
+  #A16 | D1 | 01H | Fault
+  - platform: template
+    id: "battery_charging_equipment_status_fault_binary_sensor"
+    name: "Charging Status Running"
+    entity_category: diagnostic
+    lambda: |-
+      uint16_t value = int(id(battery_charging_equipment_status_raw_value).state) >> 1;
+      if(value == 1) {
+        return true;
+      } else {
+        return false;
+      }
+
+  #A16 | D3-D2 | 00H | No Charging
+  - platform: template
+    id: "battery_charging_equipment_status_no_charging_binary_sensor"
+    name: "Charging Status No Charging"
+    entity_category: diagnostic
+    lambda: |-
+      uint16_t value = int(id(battery_charging_equipment_status_raw_value).state) >> 2;
+      if(value == 0) {
+        return true;
+      } else {
+        return false;
+      }
+
+  #A16 | D3-D2 | 01H | Float
+  - platform: template
+    id: "battery_charging_equipment_status_float_binary_sensor"
+    name: "Charging Status Float"
+    entity_category: diagnostic
+    lambda: |-
+      uint16_t value = int(id(battery_charging_equipment_status_raw_value).state) >> 2;
+      if(value == 1) {
+        return true;
+      } else {
+        return false;
+      }
+
+  #A16 | D3-D2 | 02H | Boost
+  - platform: template
+    id: "battery_charging_equipment_status_boost_binary_sensor"
+    name: "Charging Status Boost"
+    entity_category: diagnostic
+    lambda: |-
+      uint16_t value = int(id(battery_charging_equipment_status_raw_value).state) >> 2;
+      if(value == 2) {
+        return true;
+      } else {
+        return false;
+      }
+    
+  #A16 | D3-D2 | 03H | Equalization
+  - platform: template
+    id: "battery_charging_equipment_status_equalization_binary_sensor"
+    name: "Charging Status Equalization"
+    entity_category: diagnostic
+    lambda: |-
+      uint16_t value = int(id(battery_charging_equipment_status_raw_value).state) >> 2;
+      if(value == 3) {
+        return true;
+      } else {
+        return false;
+      }
+
+  - platform: status
+    name: "Verbunden"
