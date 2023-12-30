@@ -748,6 +748,7 @@ binary_sensor:
     entity_category: diagnostic
     lambda: |-
       uint16_t value = int(id(battery_charging_equipment_status_raw_value).state) >> 2;
+      value = value & 0x0003;
       if(value == 0) {
         return true;
       } else {
@@ -761,6 +762,7 @@ binary_sensor:
     entity_category: diagnostic
     lambda: |-
       uint16_t value = int(id(battery_charging_equipment_status_raw_value).state) >> 2;
+      value = value & 0x0003;
       if(value == 1) {
         return true;
       } else {
@@ -774,6 +776,7 @@ binary_sensor:
     entity_category: diagnostic
     lambda: |-
       uint16_t value = int(id(battery_charging_equipment_status_raw_value).state) >> 2;
+      value = value & 0x0003;
       if(value == 2) {
         return true;
       } else {
@@ -787,6 +790,7 @@ binary_sensor:
     entity_category: diagnostic
     lambda: |-
       uint16_t value = int(id(battery_charging_equipment_status_raw_value).state) >> 2;
+      value = value & 0x0003;
       if(value == 3) {
         return true;
       } else {
