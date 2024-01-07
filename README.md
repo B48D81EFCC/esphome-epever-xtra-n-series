@@ -5,6 +5,20 @@ ESPHome YAML config file and documentation are are not finalized yet.
 # EPEVER XTRA N Series MPPT Solar Charger ESPHome project
 Read measurement values from the MPPT Solar Charger and write configuration values to the Solar Charger via RS485 (Modbus) using ESPHome.
 
+# Overview
+
+```
+           RS485 (Modbus)                  UART
+┌─────────┐             ┌──────────┐               ┌───────────┐
+│         │             │          │<----- RX ---->│           │
+│         │<-----B- --->│  RS485   │<----- TX ---->│  ESP32    │
+│  XTRA N │<---- A+ --->│  to TTL  │<----- GND --->│  with     │
+│         │<--- GND --->│  module  │<-- 3.3 VCC -->│  esphome  │
+│         │             │          │               │           │
+└─────────┘             └──────────┘               └───────────┘
+
+```
+
 # Limitations
 At the moment only read operations are implemented. Write operations are not implemented yet.
 
