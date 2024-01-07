@@ -1,10 +1,14 @@
+# Preliminary Status
+Work in progress.
+ESPHome YAML config file and documentation are are not finalized yet.
+
 # EPEVER XTRA N Series MPPT Solar Charger ESPHome project
 Read measurement values from the MPPT Solar Charger and write configuration values to the Solar Charger via RS485 (Modbus) using ESPHome.
 
 # Limitations
-At the moment only read operations are supported. No write operations are supported yet.
+At the moment only read operations are implemented. Write operations are not implemented yet.
 
-# Supported modbus register
+# Implemented Modbus Registers
 | Number    | Name | Description |
 | --------- | ---- | ----------- |
 | A1        | Over Temperature Device | True or False. According to the manual, the controller will stop operation if 85°C is exceeded |
